@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>ServioApp – Servicios a tu puerta</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#7c4a1e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ServioApp"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;color:#2a2018;background:#f0ece6}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif}
+
+/* QUARTZ */
+.qbg{
+  background-color:#f0ece6;
+  background-image:
+    repeating-linear-gradient(118deg,transparent 0,transparent 44px,rgba(160,130,100,.09) 44px,rgba(160,130,100,.09) 45px),
+    repeating-linear-gradient(52deg,transparent 0,transparent 72px,rgba(140,110,80,.07) 72px,rgba(140,110,80,.07) 73px),
+    linear-gradient(155deg,#faf8f5 0%,#f2ece5 35%,#ece4da 65%,#f4efe8 100%);
+  min-height:100vh;
+}
+/* WOOD */
+.whdr,.wbar{
+  background-color:#8b5520;
+  background-image:
+    repeating-linear-gradient(90deg,transparent 0,transparent 3px,rgba(255,210,140,.08) 3px,rgba(255,210,140,.08) 4px),
+    repeating-linear-gradient(89deg,transparent 0,transparent 11px,rgba(0,0,0,.08) 11px,rgba(0,0,0,.08) 12px),
+    linear-gradient(180deg,#9e6030 0%,#8b5520 50%,#7a4818 100%);
+}
+.whdr{border-bottom:2px solid #4e2e0e;box-shadow:0 4px 22px rgba(40,18,4,.32)}
+.wbar{
+  background-color:#7c4a1e;
+  border-top:2px solid #4e2e0e;
+  box-shadow:0 -4px 22px rgba(40,18,4,.38),inset 0 1px 0 rgba(255,210,120,.14);
+  position:fixed;bottom:0;left:0;right:0;
+  display:flex;justify-content:space-around;
+  padding:10px 0 18px;z-index:50;
+}
+
+/* BUTTONS */
+.bp{display:block;width:100%;padding:15px;border-radius:50px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#2d8c4e,#3db368);color:#fff;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:15px;
+  box-shadow:0 8px 24px rgba(45,140,78,.35);transition:transform .2s,box-shadow .2s;text-align:center}
+.bp:hover{transform:scale(1.03) translateY(-2px);box-shadow:0 12px 32px rgba(45,140,78,.5)}
+.bp:active{transform:scale(.97)}
+.bp:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none}
+.bg{display:block;width:100%;padding:13px;border-radius:50px;border:2px solid rgba(45,140,78,.4);
+  cursor:pointer;background:rgba(255,255,255,.6);color:#2d8c4e;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;transition:all .2s;text-align:center}
+.bg:hover{background:rgba(45,140,78,.1);transform:scale(1.02)}
+
+/* CARD */
+.card{background:rgba(255,255,255,.72);border-radius:20px;border:1px solid rgba(120,90,60,.14);
+  backdrop-filter:blur(6px);transition:transform .25s,box-shadow .25s;cursor:pointer;
+  box-shadow:0 4px 16px rgba(100,70,40,.12)}
+.card:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 16px 36px rgba(45,140,78,.18);border-color:rgba(45,140,78,.3)}
+
+/* PILLS */
+.pill{padding:7px 15px;border-radius:50px;border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;transition:all .2s;white-space:nowrap}
+.pa{background:linear-gradient(135deg,#2d8c4e,#3db368);color:#fff;box-shadow:0 4px 12px rgba(45,140,78,.3)}
+.pn{background:rgba(255,255,255,.65);color:#8a7a6a;border:1px solid rgba(120,90,60,.15)}
+.pn:hover{background:rgba(45,140,78,.1);color:#2d8c4e}
+
+/* FIELDS */
+.field{width:100%;padding:13px 16px;border-radius:14px;border:1.5px solid rgba(120,90,60,.22);
+  background:rgba(255,255,255,.82);color:#2a2018;font-size:14px;outline:none;
+  font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s}
+.field:focus{border-color:rgba(45,140,78,.55);box-shadow:0 0 0 3px rgba(45,140,78,.1)}
+.field::placeholder{color:#8a7a6a}
+textarea.field{resize:vertical;min-height:90px;line-height:1.6}
+select.field{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a6a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center}
+.flabel{font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;color:#5a4a38;margin-bottom:7px;display:block}
+.fgroup{margin-bottom:18px}
+.srch{width:100%;padding:12px 14px 12px 46px;border-radius:50px;
+  background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.25);
+  color:#fff;font-size:14px;outline:none;font-family:'DM Sans',sans-serif;caret-color:#fff}
+.srch:focus{border-color:rgba(168,230,184,.5)}
+.srch::placeholder{color:rgba(220,190,145,.65)}
+
+/* NAV BUTTONS */
+.nb{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;
+  cursor:pointer;font-size:11px;font-family:'Outfit',sans-serif;font-weight:700;
+  letter-spacing:.3px;transition:color .2s;padding:0 10px}
+.nb .ni{font-size:22px;transition:transform .2s}
+.nb:hover .ni{transform:translateY(-2px)}
+.na{color:#c8f5d8!important}
+.nn{color:rgba(210,170,110,.55)!important}
+
+/* MODAL */
+.mov{position:fixed;inset:0;background:rgba(40,20,5,.55);backdrop-filter:blur(18px);
+  display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:16px;
+  animation:fadeIn .2s ease}
+.msh{background:linear-gradient(158deg,#faf8f5 0%,#ede5d8 100%);border-radius:28px;
+  padding:24px;width:100%;max-width:500px;border:1px solid rgba(120,80,40,.18);
+  box-shadow:0 -8px 40px rgba(50,25,8,.2);animation:slideUp .28s ease;
+  max-height:90vh;overflow-y:auto}
+
+/* MAP — clave: necesita height explícito */
+.map-box{width:100%;border-radius:18px;overflow:hidden;position:relative;
+  border:2px solid rgba(45,140,78,.25);box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.map-box .leaflet-container{height:100%!important;width:100%!important;
+  font-family:'DM Sans',sans-serif!important}
+.map-gps-btn{position:absolute;z-index:1000;bottom:12px;right:12px;
+  background:white;border:none;border-radius:12px;padding:9px 13px;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;color:#2d8c4e;
+  box-shadow:0 3px 14px rgba(0,0,0,.18);display:flex;align-items:center;gap:6px;
+  transition:background .2s}
+.map-gps-btn:hover{background:#f0faf4}
+
+/* SPINNER */
+.spin{width:26px;height:26px;border:3px solid rgba(45,140,78,.2);
+  border-top-color:#2d8c4e;border-radius:50%;animation:spinA 1s linear infinite}
+
+/* CHECKBOX */
+.chk-wrap{display:flex;align-items:flex-start;gap:11px;cursor:pointer;margin-bottom:12px}
+.chk-box{width:22px;height:22px;border-radius:7px;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+
+/* PWA */
+#pwa-splash{position:fixed;inset:0;background:linear-gradient(135deg,#1a5c30,#2d8c4e);
+  display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .6s}
+#pwa-splash.gone{opacity:0;pointer-events:none}
+#offline-bar{position:fixed;top:0;left:0;right:0;z-index:400;background:#b85c2a;
+  color:#fff;text-align:center;padding:10px;font-size:13px;
+  font-family:'Outfit',sans-serif;font-weight:700;display:none;animation:slideDown .3s ease}
+#inst-banner{position:fixed;bottom:80px;left:12px;right:12px;z-index:300;
+  background:linear-gradient(135deg,#2d8c4e,#3db368);border-radius:18px;
+  padding:13px 16px;display:none;align-items:center;gap:10px;
+  box-shadow:0 8px 28px rgba(45,140,78,.45);color:#fff}
+#inst-banner.show{display:flex}
+
+/* ANIMATIONS */
+@keyframes slideUp  {from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn   {from{opacity:0}to{opacity:1}}
+@keyframes pulse    {0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes checkPop {0%{transform:scale(0)rotate(-18deg)}70%{transform:scale(1.2)rotate(4deg)}100%{transform:scale(1)rotate(0)}}
+@keyframes floatA   {from{transform:translateY(0)}to{transform:translateY(-16px)}}
+@keyframes floatB   {from{transform:translateY(0)}to{transform:translateY(13px)}}
+@keyframes glowG    {0%,100%{box-shadow:0 8px 24px rgba(45,140,78,.4)}50%{box-shadow:0 14px 44px rgba(45,140,78,.65)}}
+@keyframes spinA    {from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes pingA    {0%{transform:scale(1);opacity:1}100%{transform:scale(2.8);opacity:0}}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(120,80,40,.3);border-radius:10px}
+</style>
+</head>
+<body>
+
+<!-- PWA SPLASH -->
+<div id="pwa-splash">
+  <div style="text-align:center;color:#fff">
+    <div style="font-size:72px;animation:pulse 1s ease 2">⚡</div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:900;margin-top:10px">ServioApp</h1>
+    <p style="opacity:.7;font-size:13px;margin-top:6px">Cargando mapa y servicios…</p>
+  </div>
+</div>
+
+<!-- OFFLINE BAR -->
+<div id="offline-bar">📡 Sin conexión — modo offline</div>
+
+<!-- INSTALL BANNER -->
+<div id="inst-banner">
+  <span style="font-size:24px">📲</span>
+  <div style="flex:1">
+    <div style="font-family:'Outfit',sans-serif;font-weight:800;font-size:13px">Instalar ServioApp</div>
+    <div style="font-size:11px;opacity:.85">Accede sin internet · más rápido</div>
+  </div>
+  <button id="inst-yes" style="padding:7px 14px;border-radius:50px;border:2px solid rgba(255,255,255,.75);background:#fff;color:#2d8c4e;font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;cursor:pointer">Instalar</button>
+  <button id="inst-no" style="background:none;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">×</button>
+</div>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+<script>
+// SW
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// Splash → hide after 1.5s
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('pwa-splash').classList.add('gone'), 1500);
+});
+
+// Offline bar
+const offBar = document.getElementById('offline-bar');
+const upOnline = () => offBar.style.display = navigator.onLine ? 'none' : 'block';
+window.addEventListener('online', upOnline); window.addEventListener('offline', upOnline); upOnline();
+
+// A2HS
+let dPrm = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); dPrm = e;
+  setTimeout(() => { if (!matchMedia('(display-mode:standalone)').matches) document.getElementById('inst-banner').classList.add('show'); }, 5000);
+});
+document.getElementById('inst-yes').onclick = async () => {
+  document.getElementById('inst-banner').classList.remove('show');
+  if (dPrm) { dPrm.prompt(); await dPrm.userChoice; dPrm = null; }
+};
+document.getElementById('inst-no').onclick = () => document.getElementById('inst-banner').classList.remove('show');
+window.addEventListener('appinstalled', () => { document.getElementById('inst-banner').classList.remove('show'); dPrm = null; });
+
+window.__MODE__ = new URLSearchParams(location.search).get('mode');
+</script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ═══════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════ */
+const SVCS = [
+  { id:1,  name:"Plomero",          icon:"🔧", price:250, rating:4.8, time:"30 min", pros:12, cat:"Hogar",        lat:18.8570, lng:-99.2305 },
+  { id:2,  name:"Chef a domicilio", icon:"👨‍🍳", price:400, rating:4.9, time:"45 min", pros:8,  cat:"Gastronomía",  lat:18.8600, lng:-99.2200 },
+  { id:3,  name:"Mesero",           icon:"🍽️", price:180, rating:4.7, time:"20 min", pros:15, cat:"Eventos",      lat:18.8490, lng:-99.2318 },
+  { id:4,  name:"Limpieza",         icon:"🧹", price:300, rating:4.6, time:"25 min", pros:20, cat:"Hogar",        lat:18.8555, lng:-99.2155 },
+  { id:5,  name:"Electricista",     icon:"⚡", price:350, rating:4.8, time:"35 min", pros:9,  cat:"Hogar",        lat:18.8620, lng:-99.2380 },
+  { id:6,  name:"Jardinero",        icon:"🌿", price:200, rating:4.5, time:"40 min", pros:7,  cat:"Exterior",     lat:18.8450, lng:-99.2245 },
+  { id:7,  name:"Pintor",           icon:"🎨", price:280, rating:4.7, time:"50 min", pros:11, cat:"Hogar",        lat:18.8580, lng:-99.2115 },
+  { id:8,  name:"Niñera",           icon:"👶", price:150, rating:4.9, time:"15 min", pros:18, cat:"Cuidado",      lat:18.8515, lng:-99.2402 },
+  { id:9,  name:"Carpintero",       icon:"🪚", price:320, rating:4.6, time:"45 min", pros:6,  cat:"Hogar",        lat:18.8645, lng:-99.2275 },
+  { id:10, name:"Enfermero(a)",     icon:"🏥", price:380, rating:4.9, time:"20 min", pros:10, cat:"Cuidado",      lat:18.8475, lng:-99.2178 },
+];
+const CATS = ["Todos","Hogar","Gastronomía","Eventos","Exterior","Cuidado"];
+const JOBS0 = [
+  { id:1, client:"Ana García",      service:"Limpieza", address:"Calle Morelos 45",  dist:"1.2 km", price:300, status:"pending", lat:18.8553, lng:-99.2278 },
+  { id:2, client:"Carlos López",    service:"Plomería", address:"Av. Juárez 120",    dist:"2.8 km", price:250, status:"pending", lat:18.8621, lng:-99.2149 },
+  { id:3, client:"María Rodríguez", service:"Chef",     address:"Colonia Centro 8",  dist:"0.9 km", price:400, status:"active",  lat:18.8498, lng:-99.2341 },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+const GI = ({ch, s=34}) => (
+  <div style={{fontSize:s, filter:"sepia(.12) saturate(1.6) hue-rotate(58deg) brightness(.86)", lineHeight:1}}>{ch}</div>
+);
+
+const Empty = ({icon, txt}) => (
+  <div style={{textAlign:"center", padding:"52px 0", color:"#8a7a6a"}}>
+    <div style={{fontSize:"48px", marginBottom:"12px"}}>{icon}</div>
+    <p style={{fontSize:"14px"}}>{txt}</p>
+  </div>
+);
+
+const Row = ({label, value, green}) => (
+  <div style={{display:"flex", justifyContent:"space-between", marginBottom:"9px"}}>
+    <span style={{color:"#7a6a5a", fontSize:"13px"}}>{label}</span>
+    <span style={{fontWeight:700, color: green ? "#2d8c4e" : "#2a2018", fontSize:"13px"}}>{value}</span>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════════
+   MAP COMPONENT — Leaflet + OpenStreetMap real
+═══════════════════════════════════════════════════════════ */
+function LeafletMap({ height=280, userPos, markers=[], onMarkerClick, onRequestGPS }) {
+  const divRef  = useRef(null);
+  const mapRef  = useRef(null);
+  const userMk  = useRef(null);
+  const mkRefs  = useRef([]);
+
+  // Init map once
+  useEffect(() => {
+    if (mapRef.current || !divRef.current) return;
+    const center = userPos || [18.853, -99.226];
+    const map = L.map(divRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+      attributionControl: true
+    }).setView(center, 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(map);
+
+    mapRef.current = map;
+    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
+  }, []);
+
+  // Update user marker
+  useEffect(() => {
+    if (!mapRef.current || !userPos) return;
+    if (userMk.current) mapRef.current.removeLayer(userMk.current);
+
+    const html = `
+      <div style="position:relative;width:22px;height:22px">
+        <div style="position:absolute;inset:0;border-radius:50%;background:rgba(45,140,78,.3);animation:pingA 1.8s ease-out infinite"></div>
+        <div style="position:absolute;inset:3px;border-radius:50%;background:#2d8c4e;border:2.5px solid white;box-shadow:0 2px 10px rgba(0,0,0,.35)"></div>
+      </div>
+      <style>@keyframes pingA{0%{transform:scale(1);opacity:1}100%{transform:scale(2.8);opacity:0}}</style>`;
+
+    const icon = L.divIcon({ className:'', html, iconSize:[22,22], iconAnchor:[11,11] });
+    userMk.current = L.marker(userPos, {icon, zIndexOffset:1000})
+      .addTo(mapRef.current)
+      .bindPopup('<b style="font-family:Outfit,sans-serif">📍 Tu ubicación actual</b>')
+      .openPopup();
+
+    mapRef.current.flyTo(userPos, 15, { duration: 1.4 });
+  }, [userPos]);
+
+  // Render service/job markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mkRefs.current.forEach(m => { try { mapRef.current.removeLayer(m); } catch(e){} });
+    mkRefs.current = [];
+
+    markers.forEach(mk => {
+      if (!mk.lat || !mk.lng) return;
+      const html = `
+        <div style="
+          background:linear-gradient(135deg,#2d8c4e,#3db368);
+          color:white;border-radius:20px 20px 20px 4px;
+          padding:6px 10px;font-size:15px;
+          box-shadow:0 4px 16px rgba(45,140,78,.45);
+          border:2.5px solid white;cursor:pointer;
+          display:flex;align-items:center;gap:4px;white-space:nowrap">
+          <span>${mk.icon}</span>
+          <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700">$${mk.price}</span>
+        </div>`;
+      const icon = L.divIcon({ className:'', html, iconAnchor:[12,36] });
+      const mark = L.marker([mk.lat, mk.lng], { icon }).addTo(mapRef.current);
+      mark.on('click', () => onMarkerClick && onMarkerClick(mk));
+      mark.bindTooltip(
+        `<b style="font-family:Outfit,sans-serif">${mk.name || mk.client || ''}</b>${mk.address ? '<br>'+mk.address : ''}`,
+        { direction:'top', offset:[0,-10] }
+      );
+      mkRefs.current.push(mark);
+    });
+  }, [markers]);
+
+  return (
+    <div className="map-box" style={{height}}>
+      <div ref={divRef} style={{width:"100%", height:"100%"}} />
+      <button className="map-gps-btn" onClick={onRequestGPS}>
+        <span>📍</span> Mi ubicación
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SPLASH
+═══════════════════════════════════════════════════════════ */
+function Splash({ onSelect }) {
+  return (
+    <div className="qbg" style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",padding:"24px"}}>
+      {/* quartz veins */}
+      {[[2,"62%","20%","24%","-22deg",.18,"floatA 7s ease-in-out infinite alternate"],[3,"44%","8%","60%","18deg",.13,"floatB 5s ease-in-out infinite alternate"]].map((v,i)=>(
+        <div key={i} style={{position:"absolute",width:`${v[0]}px`,height:v[1],top:v[2],left:v[3],transform:`rotate(${v[4]})`,background:"linear-gradient(180deg,transparent,rgba(130,100,70,.42),transparent)",opacity:v[5],animation:v[6],pointerEvents:"none",borderRadius:"99px"}}/>
+      ))}
+      <div style={{textAlign:"center", zIndex:2, animation:"slideUp .9s ease both"}}>
+        <div style={{width:"94px",height:"94px",borderRadius:"28px",margin:"0 auto 16px",background:"linear-gradient(135deg,#2d8c4e,#3db368)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"46px",animation:"glowG 3s ease infinite"}}>⚡</div>
+        <h1 style={{fontSize:"clamp(40px,10vw,58px)",fontWeight:900,letterSpacing:"-2px",color:"#1a3a26",margin:"0 0 6px"}}>ServioApp</h1>
+        <p style={{fontSize:"12px",color:"#8a7a6a",letterSpacing:"3px",textTransform:"uppercase",marginBottom:"44px"}}>Servicios profesionales · donde estés</p>
+        <div style={{display:"flex",flexDirection:"column",gap:"12px",maxWidth:"300px",margin:"0 auto"}}>
+          <button className="bp" style={{fontSize:"16px",padding:"17px"}} onClick={()=>onSelect("client")}>🛍️ &nbsp;Necesito un servicio</button>
+          <button className="bg" style={{fontSize:"15px",padding:"15px"}} onClick={()=>onSelect("worker")}>💼 &nbsp;Quiero trabajar</button>
+          <button onClick={()=>onSelect("register")} style={{background:"none",border:"none",cursor:"pointer",color:"#4a7a5a",fontSize:"13px",textDecoration:"underline",fontFamily:"'DM Sans',sans-serif",padding:"6px",marginTop:"4px"}}>
+            ¿Eres nuevo trabajador? Regístrate →
+          </button>
+        </div>
+        <p style={{marginTop:"28px",color:"#9a8a7a",fontSize:"11px"}}>📍 Temixco, Morelos · México</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REGISTER — formulario real 3 pasos
+═══════════════════════════════════════════════════════════ */
+function RegisterApp({ onBack, onDone }) {
+  const [step, setStep]   = useState(1);
+  const [done, setDone]   = useState(false);
+  const [f, setF]         = useState({
+    name:"", last:"", phone:"", email:"",
+    specialty:"", exp:"", bio:"",
+    idType:"INE / IFE", idNum:"",
+    terms:false, privacy:false
+  });
+  const upd = (k, v) => setF(p => ({...p, [k]: v}));
+
+  const phone10 = f.phone.replace(/\D/g,"").length === 10;
+  const ok1 = f.name.trim() && f.last.trim() && phone10 && f.email.includes("@");
+  const ok2 = f.specialty && f.exp && f.bio.trim().length >= 20;
+  const ok3 = f.idNum.trim().length >= 5 && f.terms && f.privacy;
+
+  const stepTitles = ["Datos personales","Perfil profesional","Verificación e identidad"];
+
+  if (done) return (
+    <div className="qbg" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div style={{textAlign:"center",maxWidth:"360px",width:"100%",animation:"slideUp .5s ease"}}>
+        <div style={{fontSize:"80px",animation:"checkPop .8s ease forwards",marginBottom:"20px"}}>🎉</div>
+        <h2 style={{fontSize:"24px",fontWeight:800,color:"#1a3a26",marginBottom:"10px"}}>¡Solicitud enviada!</h2>
+        <p style={{color:"#7a6a5a",lineHeight:1.7,marginBottom:"22px",fontSize:"14px"}}>
+          Hola <strong>{f.name}</strong>, revisaremos tu información en <strong>1–2 días hábiles</strong>.
+          Te contactaremos al número <strong style={{color:"#2d8c4e"}}>+52 {f.phone}</strong> y al correo <strong>{f.email}</strong>.
+        </p>
+        <div style={{background:"rgba(45,140,78,.07)",borderRadius:"18px",padding:"18px",marginBottom:"22px",border:"1px solid rgba(45,140,78,.2)"}}>
+          <p style={{fontWeight:800,color:"#1a3a26",fontSize:"13px",marginBottom:"12px"}}>📋 Resumen de tu solicitud</p>
+          {[["Nombre completo",`${f.name} ${f.last}`],["Teléfono",`+52 ${f.phone}`],["Correo",f.email],["Especialidad",f.specialty],["Experiencia",f.exp]].map(([k,v])=><Row key={k} label={k} value={v}/>)}
+        </div>
+        <button className="bp" style={{marginBottom:"10px"}} onClick={onDone}>Continuar a la app →</button>
+        <button className="bg" onClick={onBack}>← Inicio</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="qbg" style={{minHeight:"100vh",paddingBottom:"30px"}}>
+      {/* Wood header */}
+      <div className="whdr" style={{padding:"52px 20px 20px"}}>
+        <button style={{background:"none",border:"none",color:"rgba(220,190,145,.7)",cursor:"pointer",marginBottom:"10px",fontSize:"14px"}} onClick={onBack}>← Volver</button>
+        <h1 style={{fontSize:"21px",fontWeight:800,color:"#f5ede0"}}>Unirse como Trabajador</h1>
+        <p style={{color:"rgba(220,190,145,.65)",fontSize:"13px",marginTop:"3px"}}>Paso {step} de 3 — {stepTitles[step-1]}</p>
+        {/* progress */}
+        <div style={{marginTop:"14px",background:"rgba(255,255,255,.16)",borderRadius:"99px",height:"5px"}}>
+          <div style={{width:`${(step/3)*100}%`,height:"100%",borderRadius:"99px",transition:"width .4s ease",background:"linear-gradient(90deg,#6bcb77,#a8e6b8)"}}/>
+        </div>
+      </div>
+
+      <div style={{padding:"22px 20px"}}>
+        {/* ─── STEP 1 ─── */}
+        {step === 1 && (
+          <div style={{animation:"slideUp .35s ease"}}>
+            {/* avatar header */}
+            <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"26px",padding:"18px",borderRadius:"18px",background:"rgba(255,255,255,.62)",border:"1px solid rgba(120,90,60,.13)"}}>
+              <div style={{width:"58px",height:"58px",borderRadius:"50%",background:"linear-gradient(135deg,#2d8c4e,#3db368)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",boxShadow:"0 4px 14px rgba(45,140,78,.3)",flexShrink:0}}>🧑</div>
+              <div>
+                <p style={{fontWeight:800,fontSize:"15px",color:"#1a3a26",margin:0}}>Información personal</p>
+                <p style={{color:"#7a6a5a",fontSize:"12px",margin:"2px 0 0"}}>Datos de contacto básicos</p>
+              </div>
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Nombre(s) *</label>
+              <input className="field" placeholder="Ej: Miguel Ángel" value={f.name} onChange={e=>upd("name",e.target.value)}/>
+            </div>
+            <div className="fgroup">
+              <label className="flabel">Apellidos *</label>
+              <input className="field" placeholder="Ej: Flores González" value={f.last} onChange={e=>upd("last",e.target.value)}/>
+            </div>
+
+            {/* ── TELÉFONO — sección destacada ── */}
+            <div className="fgroup" style={{background:"rgba(45,140,78,.07)",borderRadius:"18px",padding:"16px",border:"2px solid rgba(45,140,78,.2)"}}>
+              <label className="flabel" style={{color:"#2d8c4e",fontSize:"14px"}}>
+                📱 Número de teléfono *
+              </label>
+              <p style={{fontSize:"12px",color:"#7a6a5a",marginBottom:"10px",lineHeight:1.5}}>
+                Los clientes te contactarán directamente a este número cuando contraten tu servicio
+              </p>
+              <div style={{position:"relative"}}>
+                <span style={{position:"absolute",left:"14px",top:"50%",transform:"translateY(-50%)",color:"#5a4a38",fontWeight:700,fontSize:"15px",zIndex:2,userSelect:"none"}}>+52</span>
+                <input className="field"
+                  type="tel" inputMode="numeric" placeholder="777 123 4567"
+                  value={f.phone} maxLength={14}
+                  style={{paddingLeft:"56px",fontSize:"18px",fontWeight:700,letterSpacing:"2px",border:`2px solid ${phone10?"#2d8c4e":"rgba(120,90,60,.25)"}`}}
+                  onChange={e=>upd("phone",e.target.value)}/>
+              </div>
+              {f.phone.replace(/\D/g,"").length > 0 && !phone10 && (
+                <p style={{color:"#e07b3a",fontSize:"12px",marginTop:"7px",fontWeight:600}}>⚠️ Ingresa exactamente 10 dígitos</p>
+              )}
+              {phone10 && (
+                <p style={{color:"#2d8c4e",fontSize:"12px",marginTop:"7px",fontWeight:700}}>✅ Número válido: +52 {f.phone}</p>
+              )}
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Correo electrónico *</label>
+              <input className="field" type="email" placeholder="ejemplo@correo.com" value={f.email} onChange={e=>upd("email",e.target.value)}/>
+            </div>
+
+            <button className="bp" disabled={!ok1} onClick={()=>setStep(2)}>Continuar →</button>
+          </div>
+        )}
+
+        {/* ─── STEP 2 ─── */}
+        {step === 2 && (
+          <div style={{animation:"slideUp .35s ease"}}>
+            <div style={{background:"rgba(255,255,255,.62)",borderRadius:"16px",padding:"14px",marginBottom:"22px",border:"1px solid rgba(120,90,60,.13)"}}>
+              <p style={{fontWeight:800,color:"#1a3a26",margin:0,fontSize:"14px"}}>👤 {f.name} {f.last}</p>
+              <p style={{color:"#2d8c4e",fontSize:"12px",margin:"3px 0 0"}}>📱 +52 {f.phone} &nbsp;·&nbsp; ✉️ {f.email}</p>
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Especialidad principal *</label>
+              <select className="field" value={f.specialty} onChange={e=>upd("specialty",e.target.value)}>
+                <option value="">Selecciona una especialidad…</option>
+                {SVCS.map(s=><option key={s.id} value={s.name}>{s.icon} {s.name} — ${s.price}/hr</option>)}
+              </select>
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Años de experiencia *</label>
+              <select className="field" value={f.exp} onChange={e=>upd("exp",e.target.value)}>
+                <option value="">Selecciona…</option>
+                {["Menos de 1 año","1–2 años","3–5 años","5–10 años","Más de 10 años"].map(o=><option key={o}>{o}</option>)}
+              </select>
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Descripción personal * <span style={{fontWeight:400,color:"#8a7a6a",fontSize:"11px"}}>(mín. 20 caracteres)</span></label>
+              <textarea className="field" rows={4}
+                placeholder="Cuéntanos sobre ti, tu experiencia y por qué los clientes deberían contratarte. Sé específico sobre tus habilidades…"
+                value={f.bio} onChange={e=>upd("bio",e.target.value)}/>
+              <p style={{fontSize:"11px",color:f.bio.length>=20?"#2d8c4e":"#8a7a6a",marginTop:"5px",fontWeight:600}}>
+                {f.bio.length} / 20 mínimo {f.bio.length>=20&&"✓"}
+              </p>
+            </div>
+
+            <div style={{display:"flex",gap:"10px"}}>
+              <button className="bg" style={{flex:1}} onClick={()=>setStep(1)}>← Atrás</button>
+              <button className="bp" style={{flex:2}} disabled={!ok2} onClick={()=>setStep(3)}>Continuar →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── STEP 3 ─── */}
+        {step === 3 && (
+          <div style={{animation:"slideUp .35s ease"}}>
+            <div style={{background:"rgba(255,200,80,.09)",borderRadius:"16px",padding:"15px",marginBottom:"22px",border:"1px solid rgba(200,150,50,.22)"}}>
+              <p style={{fontWeight:800,color:"#7a4a10",fontSize:"13px",margin:"0 0 4px"}}>🔐 Verificación de identidad</p>
+              <p style={{color:"#8a6a40",fontSize:"12px",margin:0,lineHeight:1.6}}>Verificamos tu identidad para garantizar la seguridad de los clientes. Tus datos están cifrados y son confidenciales.</p>
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Tipo de identificación *</label>
+              <select className="field" value={f.idType} onChange={e=>upd("idType",e.target.value)}>
+                {["INE / IFE","Pasaporte mexicano","Cédula profesional","Licencia de conducir"].map(o=><option key={o}>{o}</option>)}
+              </select>
+            </div>
+
+            <div className="fgroup">
+              <label className="flabel">Número de folio / clave *</label>
+              <input className="field" placeholder="Ej: AAGF801210HDFLRN08" value={f.idNum} onChange={e=>upd("idNum",e.target.value)}/>
+            </div>
+
+            {/* términos */}
+            <div style={{background:"rgba(255,255,255,.65)",borderRadius:"16px",padding:"16px",marginBottom:"16px",border:"1px solid rgba(120,90,60,.13)"}}>
+              {[["terms","Acepto los Términos y Condiciones de ServioApp *"],["privacy","Acepto el Aviso de Privacidad y el tratamiento de mis datos personales *"]].map(([k,txt],i)=>(
+                <div key={k} className="chk-wrap" style={{marginBottom:i===0?"14px":"0"}} onClick={()=>upd(k,!f[k])}>
+                  <div className="chk-box" style={{border:`2px solid ${f[k]?"#2d8c4e":"rgba(120,90,60,.3)"}`,background:f[k]?"#2d8c4e":"transparent"}}>
+                    {f[k] && <span style={{color:"white",fontSize:"13px",lineHeight:1}}>✓</span>}
+                  </div>
+                  <span style={{fontSize:"12px",color:"#5a4a38",lineHeight:1.6,userSelect:"none"}}>{txt}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* resumen */}
+            <div style={{background:"rgba(45,140,78,.07)",borderRadius:"16px",padding:"16px",marginBottom:"22px",border:"1px solid rgba(45,140,78,.18)"}}>
+              <p style={{fontWeight:800,color:"#1a3a26",fontSize:"12px",marginBottom:"10px"}}>📋 Resumen de tu solicitud</p>
+              {[["Nombre",`${f.name} ${f.last}`],["Teléfono",`+52 ${f.phone}`],["Correo",f.email],["Especialidad",f.specialty],["Experiencia",f.exp]].map(([k,v])=><Row key={k} label={k} value={v}/>)}
+            </div>
+
+            <div style={{display:"flex",gap:"10px"}}>
+              <button className="bg" style={{flex:1}} onClick={()=>setStep(2)}>← Atrás</button>
+              <button className="bp" style={{flex:2}} disabled={!ok3} onClick={()=>setDone(true)}>
+                Enviar solicitud ✅
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CLIENT APP
+═══════════════════════════════════════════════════════════ */
+function ClientApp({ onBack }) {
+  const [cat, setCat]     = useState("Todos");
+  const [query, setQuery] = useState("");
+  const [sel, setSel]     = useState(null);
+  const [ord, setOrd]     = useState(false);
+  const [ts, setTs]       = useState(0);
+  const [tab, setTab]     = useState("home");
+  const [userPos, setUP]  = useState(null);
+  const [locating, setLoc]= useState(false);
+  const [locErr, setErr]  = useState(null);
+  const [pinSel, setPinSel] = useState(null);
+
+  useEffect(()=>{
+    if (!ord) return;
+    const t = setInterval(()=>setTs(s=>{ if(s>=2){clearInterval(t);return 2;} return s+1; }), 1800);
+    return ()=>clearInterval(t);
+  },[ord]);
+
+  const getGPS = useCallback(() => {
+    if (!navigator.geolocation) { setErr("Tu navegador no soporta geolocalización"); return; }
+    setLoc(true); setErr(null);
+    navigator.geolocation.getCurrentPosition(
+      p => { setUP([p.coords.latitude, p.coords.longitude]); setLoc(false); },
+      () => { setLoc(false); setErr("No se pudo obtener tu ubicación. Activa los permisos GPS."); },
+      { enableHighAccuracy:true, timeout:12000 }
+    );
+  },[]);
+
+  // Auto-locate when map tab opens
+  useEffect(()=>{ if (tab==="map" && !userPos && !locating) getGPS(); },[tab]);
+
+  const filtered = SVCS.filter(s =>
+    (cat==="Todos" || s.cat===cat) && s.name.toLowerCase().includes(query.toLowerCase())
+  );
+
+  // Confirmation screen
+  if (ord && sel) {
+    const steps = ["Buscando","En camino","¡Llegó!"];
+    return (
+      <div className="qbg" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+        <div style={{textAlign:"center",maxWidth:"360px",width:"100%",animation:"slideUp .5s ease"}}>
+          <div style={{fontSize:"80px",animation:"checkPop .8s ease forwards",marginBottom:"20px"}}>✅</div>
+          <h2 style={{fontSize:"24px",fontWeight:800,color:"#1a3a26",marginBottom:"8px"}}>¡Servicio solicitado!</h2>
+          <p style={{color:"#7a6a5a",marginBottom:"22px",fontSize:"14px"}}>Tu {sel.name.toLowerCase()} está en camino</p>
+          <div style={{background:"rgba(255,255,255,.76)",borderRadius:"18px",padding:"18px",marginBottom:"14px",border:"1px solid rgba(120,90,60,.14)"}}>
+            <Row label="Servicio" value={`${sel.icon} ${sel.name}`}/>
+            <Row label="Precio" value={`$${sel.price} MXN`} green/>
+            <Row label="Tiempo estimado" value={sel.time}/>
+          </div>
+          <div style={{background:"rgba(45,140,78,.07)",borderRadius:"18px",padding:"16px",marginBottom:"22px",border:"1px solid rgba(45,140,78,.2)"}}>
+            <p style={{fontWeight:800,fontSize:"11px",color:"#2d8c4e",letterSpacing:"1px",textTransform:"uppercase",marginBottom:"14px"}}>📍 Seguimiento en vivo</p>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"5px"}}>
+              {steps.map((s,i)=>(
+                <React.Fragment key={i}>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"4px"}}>
+                    <div style={{width:"32px",height:"32px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:800,fontFamily:"'Outfit',sans-serif",color:i<=ts?"white":"#8a7a6a",background:i<=ts?"linear-gradient(135deg,#2d8c4e,#3db368)":"rgba(0,0,0,.07)",transition:"all .4s"}}>{i<ts?"✓":i+1}</div>
+                    <span style={{fontSize:"10px",color:i<=ts?"#2d8c4e":"#8a7a6a",whiteSpace:"nowrap"}}>{s}</span>
+                  </div>
+                  {i<2 && <div style={{width:"22px",height:"2px",background:i<ts?"#2d8c4e":"rgba(0,0,0,.1)",marginBottom:"14px",transition:"background .4s"}}/>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+          <button className="bp" style={{marginBottom:"10px"}} onClick={()=>{setOrd(false);setSel(null);setTs(0);}}>Pedir otro servicio</button>
+          <button className="bg" onClick={onBack}>← Inicio</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="qbg" style={{minHeight:"100vh",paddingBottom:"80px"}}>
+      {/* Wood header */}
+      <div className="whdr" style={{padding:"52px 20px 16px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
+          <div>
+            <p style={{margin:0,color:"#a8e6b8",fontSize:"11px",fontWeight:700,letterSpacing:"1px",textTransform:"uppercase"}}>
+              {userPos ? "📍 GPS activo" : "📍 Temixco, Morelos"}
+            </p>
+            <h1 style={{margin:"3px 0 0",fontSize:"20px",fontWeight:800,color:"#f5ede0"}}>¿Qué necesitas hoy?</h1>
+          </div>
+          <div style={{width:"42px",height:"42px",borderRadius:"50%",background:"linear-gradient(135deg,#2d8c4e,#3db368)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"19px",boxShadow:"0 4px 12px rgba(0,0,0,.3)"}}>👤</div>
+        </div>
+        {/* Tab bar */}
+        <div style={{display:"flex",background:"rgba(0,0,0,.16)",borderRadius:"12px",padding:"3px",marginBottom:"12px"}}>
+          {[["home","🏠 Servicios"],["map","🗺️ Mapa"]].map(([t,l])=>(
+            <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"8px",borderRadius:"10px",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:"13px",transition:"all .2s",background:tab===t?"rgba(255,255,255,.92)":"transparent",color:tab===t?"#2d8c4e":"rgba(220,190,145,.7)"}}>
+              {l}
+            </button>
+          ))}
+        </div>
+        {tab==="home" && (
+          <div style={{position:"relative"}}>
+            <span style={{position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"15px",opacity:.55}}>🔍</span>
+            <input className="srch" placeholder="Buscar servicio…" value={query} onChange={e=>setQuery(e.target.value)}/>
+          </div>
+        )}
+      </div>
+
+      {/* ── MAP TAB ── */}
+      {tab==="map" && (
+        <div style={{padding:"18px 20px"}}>
+          <h2 style={{fontWeight:800,color:"#1a3a26",fontSize:"17px",marginBottom:"4px"}}>🗺️ Profesionales cerca de ti</h2>
+          <p style={{color:"#7a6a5a",fontSize:"13px",marginBottom:"14px"}}>Toca un marcador 🟢 para ver el perfil</p>
+
+          {locating && (
+            <div style={{background:"rgba(255,255,255,.72)",borderRadius:"14px",padding:"14px",marginBottom:"12px",border:"1px solid rgba(45,140,78,.18)",display:"flex",alignItems:"center",gap:"12px"}}>
+              <div className="spin"/><span style={{color:"#5a4a38",fontSize:"13px",fontWeight:600}}>Obteniendo tu ubicación GPS…</span>
+            </div>
+          )}
+          {locErr && (
+            <div style={{background:"rgba(255,150,80,.08)",borderRadius:"14px",padding:"13px",marginBottom:"12px",border:"1px solid rgba(255,150,80,.22)",color:"#8a4a20",fontSize:"12px"}}>
+              ⚠️ {locErr}
+            </div>
+          )}
+
+          {/* THE REAL MAP */}
+          <LeafletMap
+            height={320}
+            userPos={userPos}
+            markers={SVCS}
+            onMarkerClick={s => setPinSel(s)}
+            onRequestGPS={getGPS}
+          />
+
+          {userPos && (
+            <div style={{background:"rgba(45,140,78,.07)",borderRadius:"10px",padding:"10px 14px",marginTop:"10px",border:"1px solid rgba(45,140,78,.16)",fontSize:"12px",color:"#2d8c4e",fontWeight:700}}>
+              ✅ GPS activo · Lat {userPos[0].toFixed(5)}, Lng {userPos[1].toFixed(5)}
+            </div>
+          )}
+          {!userPos && !locating && (
+            <div style={{background:"rgba(255,255,255,.62)",borderRadius:"10px",padding:"10px 14px",marginTop:"10px",border:"1px solid rgba(120,90,60,.14)",fontSize:"12px",color:"#7a6a5a"}}>
+              Presiona "📍 Mi ubicación" en el mapa para activar el GPS y ver tu posición real
+            </div>
+          )}
+
+          {/* Workers below map */}
+          <h3 style={{fontWeight:800,color:"#1a3a26",fontSize:"15px",margin:"20px 0 12px"}}>Disponibles ahora</h3>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"11px"}}>
+            {SVCS.slice(0,6).map((s,i)=>(
+              <div key={s.id} className="card" onClick={()=>setSel(s)} style={{padding:"15px",animation:`slideUp .3s ease ${i*.04}s both`}}>
+                <GI ch={s.icon} s={30}/><h3 style={{margin:"7px 0 3px",fontSize:"13px",fontWeight:700,color:"#1a3a26"}}>{s.name}</h3>
+                <p style={{margin:0,color:"#2d8c4e",fontSize:"15px",fontWeight:800}}>${s.price}</p>
+                <div style={{fontSize:"11px",color:"#7a6a5a",marginTop:"3px"}}>⭐{s.rating} · ⏱{s.time}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── HOME TAB ── */}
+      {tab==="home" && (
+        <>
+          <div style={{display:"flex",gap:"7px",padding:"12px 20px",overflowX:"auto",scrollbarWidth:"none"}}>
+            {CATS.map(c=><button key={c} className={`pill ${cat===c?"pa":"pn"}`} onClick={()=>setCat(c)}>{c}</button>)}
+          </div>
+          <div style={{margin:"0 20px 16px",padding:"15px 18px",borderRadius:"18px",background:"rgba(45,140,78,.09)",border:"1px solid rgba(45,140,78,.2)"}}>
+            <p style={{margin:"0 0 2px",color:"#2d8c4e",fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px"}}>🔥 Más solicitado hoy</p>
+            <p style={{margin:0,fontSize:"16px",fontWeight:800,color:"#1a3a26"}}>Limpieza del hogar · $300 MXN</p>
+            <p style={{margin:"2px 0 0",color:"#7a6a5a",fontSize:"12px"}}>20 profesionales disponibles ahora</p>
+          </div>
+          <div style={{padding:"0 20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+            {filtered.map((s,i)=>(
+              <div key={s.id} className="card" onClick={()=>setSel(s)} style={{padding:"17px",animation:`slideUp .35s ease ${i*.04}s both`}}>
+                <GI ch={s.icon} s={34}/><h3 style={{margin:"9px 0 4px",fontSize:"13px",fontWeight:700,color:"#1a3a26"}}>{s.name}</h3>
+                <p style={{margin:"0 0 8px",color:"#2d8c4e",fontSize:"17px",fontWeight:800}}>${s.price}</p>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"11px"}}>
+                  <span style={{color:"#b8860b"}}>⭐{s.rating}</span><span style={{color:"#7a6a5a"}}>⏱{s.time}</span>
+                </div>
+                <div style={{marginTop:"5px",fontSize:"11px",color:"#2d8c4e",fontWeight:600}}>✓{s.pros} disponibles</div>
+              </div>
+            ))}
+            {filtered.length===0 && (
+              <div style={{gridColumn:"1/-1",textAlign:"center",padding:"44px 0",color:"#8a7a6a"}}>
+                <div style={{fontSize:"42px",marginBottom:"10px"}}>🔍</div><p>No encontramos "{query}"</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Service modal */}
+      {sel && !ord && (
+        <div className="mov" onClick={e=>e.target===e.currentTarget&&setSel(null)}>
+          <div className="msh">
+            <div style={{textAlign:"center",marginBottom:"18px"}}>
+              <div style={{fontSize:"54px",marginBottom:"10px",filter:"sepia(.12) saturate(1.6) hue-rotate(58deg)"}}>{sel.icon}</div>
+              <h2 style={{fontSize:"21px",fontWeight:800,color:"#1a3a26",marginBottom:"5px"}}>{sel.name}</h2>
+              <div style={{display:"flex",justifyContent:"center",gap:"14px",color:"#7a6a5a",fontSize:"12px"}}>
+                <span>⭐{sel.rating}</span><span>⏱{sel.time}</span><span>👷{sel.pros} disponibles</span>
+              </div>
+            </div>
+
+            {/* Mini map showing the worker */}
+            <div style={{marginBottom:"16px"}}>
+              <p style={{fontWeight:700,color:"#1a3a26",fontSize:"12px",marginBottom:"8px"}}>📍 Ubicación del profesional</p>
+              <LeafletMap height={160} userPos={userPos} markers={[sel]} onRequestGPS={getGPS}/>
+              {!userPos && (
+                <button onClick={getGPS} style={{marginTop:"7px",width:"100%",padding:"9px",borderRadius:"10px",border:"1px dashed rgba(45,140,78,.38)",background:"none",cursor:"pointer",color:"#2d8c4e",fontWeight:700,fontSize:"12px",fontFamily:"'Outfit',sans-serif"}}>
+                  📍 Activar mi GPS para ver la distancia
+                </button>
+              )}
+            </div>
+
+            <div style={{background:"rgba(255,255,255,.65)",borderRadius:"14px",padding:"15px",marginBottom:"16px",border:"1px solid rgba(120,90,60,.12)"}}>
+              <Row label="Tarifa base" value={`$${sel.price} MXN/hr`}/>
+              <Row label="Comisión ServioApp" value="Gratis" green/>
+              <div style={{borderTop:"1px solid rgba(120,90,60,.12)",paddingTop:"10px",display:"flex",justifyContent:"space-between"}}>
+                <span style={{fontWeight:700,color:"#1a3a26",fontSize:"14px"}}>Total estimado</span>
+                <span style={{fontWeight:800,color:"#2d8c4e",fontSize:"18px"}}>${sel.price} MXN</span>
+              </div>
+            </div>
+            <button className="bp" style={{marginBottom:"9px",fontSize:"15px",padding:"15px"}} onClick={()=>setOrd(true)}>
+              Solicitar ahora 🚀
+            </button>
+            <button className="bg" onClick={()=>setSel(null)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Map pin modal */}
+      {pinSel && (
+        <div className="mov" onClick={e=>e.target===e.currentTarget&&setPinSel(null)}>
+          <div className="msh" style={{padding:"20px"}}>
+            <div style={{display:"flex",gap:"12px",alignItems:"center",marginBottom:"16px"}}>
+              <div style={{width:"54px",height:"54px",borderRadius:"16px",background:"linear-gradient(135deg,#2d8c4e,#3db368)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",filter:"sepia(.12) saturate(1.6) hue-rotate(58deg)",boxShadow:"0 4px 14px rgba(45,140,78,.3)"}}>{pinSel.icon}</div>
+              <div><h3 style={{fontWeight:800,color:"#1a3a26",fontSize:"17px",margin:0}}>{pinSel.name}</h3><p style={{color:"#2d8c4e",fontWeight:700,fontSize:"15px",margin:"2px 0 0"}}>${pinSel.price}/hr</p></div>
+            </div>
+            <Row label="Calificación" value={`⭐ ${pinSel.rating}`}/>
+            <Row label="Tiempo de llegada" value={`⏱ ${pinSel.time}`}/>
+            <Row label="Disponibles" value={`✓ ${pinSel.pros} profesionales`}/>
+            <button className="bp" style={{marginTop:"14px"}} onClick={()=>{setSel(pinSel);setPinSel(null);}}>Ver detalles y solicitar →</button>
+            <button className="bg" style={{marginTop:"9px"}} onClick={()=>setPinSel(null)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+
+      <nav className="wbar">
+        {[["🏠","Inicio",onBack,false],["📋","Servicios",()=>setTab("home"),tab==="home"],["🗺️","Mapa",()=>setTab("map"),tab==="map"],["👤","Perfil",null,false]].map(([ic,lb,fn,act],i)=>(
+          <button key={i} className={`nb ${act?"na":"nn"}`} onClick={fn||undefined}><span className="ni">{ic}</span>{lb}</button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WORKER APP
+═══════════════════════════════════════════════════════════ */
+function WorkerApp({ onBack }) {
+  const [sp, setSp]           = useState(null);
+  const [jobs, setJobs]       = useState(JOBS0);
+  const [tab, setTab]         = useState("requests");
+  const [earn, setEarn]       = useState(1240);
+  const [done, setDone]       = useState(7);
+  const [online, setOnline]   = useState(true);
+  const [phone, setPhone]     = useState("");
+  const [phoneSaved, setPS]   = useState(false);
+  const [showPhone, setShowP] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [userPos, setUP]      = useState(null);
+  const [locating, setLoc]    = useState(false);
+
+  const getGPS = () => {
+    if (!navigator.geolocation) return;
+    setLoc(true);
+    navigator.geolocation.getCurrentPosition(
+      p => { setUP([p.coords.latitude, p.coords.longitude]); setLoc(false); },
+      () => setLoc(false),
+      { enableHighAccuracy:true, timeout:12000 }
+    );
+  };
+
+  if (!sp) return (
+    <div className="qbg" style={{minHeight:"100vh",paddingBottom:"20px"}}>
+      <div className="whdr" style={{padding:"52px 20px 20px"}}>
+        <button style={{background:"none",border:"none",color:"rgba(220,190,145,.7)",cursor:"pointer",marginBottom:"10px",fontSize:"14px"}} onClick={onBack}>← Volver</button>
+        <h1 style={{fontSize:"21px",fontWeight:800,color:"#f5ede0"}}>¿En qué te especializas?</h1>
+        <p style={{color:"rgba(220,190,145,.65)",fontSize:"13px",marginTop:"3px"}}>Elige tu servicio principal</p>
+      </div>
+      <div style={{padding:"18px 20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+        {SVCS.map((s,i)=>(
+          <div key={s.id} className="card" onClick={()=>setSp(s)} style={{padding:"17px",animation:`slideUp .3s ease ${i*.04}s both`}}>
+            <GI ch={s.icon} s={30}/><h3 style={{margin:"7px 0 3px",fontSize:"13px",fontWeight:700,color:"#1a3a26"}}>{s.name}</h3>
+            <p style={{margin:0,color:"#2d8c4e",fontSize:"14px",fontWeight:700}}>${s.price}/hr</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const pending = jobs.filter(j=>j.status==="pending");
+  const active  = jobs.filter(j=>j.status==="active");
+  const accept  = id => setJobs(p=>p.map(j=>j.id===id?{...j,status:"active"}:j));
+  const reject  = id => setJobs(p=>p.filter(j=>j.id!==id));
+  const complete= id => {
+    const job=jobs.find(j=>j.id===id);
+    setJobs(p=>p.filter(j=>j.id!==id));
+    setEarn(e=>e+(job?.price||0));
+    setDone(d=>d+1);
+  };
+
+  return (
+    <div className="qbg" style={{minHeight:"100vh",paddingBottom:"80px"}}>
+      {/* Wood header */}
+      <div className="whdr" style={{padding:"52px 20px 18px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:"7px",marginBottom:"3px"}}>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:online?"#6bcb77":"rgba(255,255,255,.25)",boxShadow:online?"0 0 7px #6bcb77":"none"}}/>
+              <span style={{fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:online?"#a8e6b8":"rgba(220,190,145,.6)"}}>{online?"En línea":"Desconectado"}</span>
+            </div>
+            <h1 style={{fontSize:"19px",fontWeight:800,color:"#f5ede0"}}>Panel de trabajo {sp.icon}</h1>
+          </div>
+          <div style={{display:"flex",gap:"7px"}}>
+            <button onClick={()=>setOnline(o=>!o)} style={{padding:"7px 11px",borderRadius:"50px",border:"none",cursor:"pointer",background:online?"rgba(107,203,119,.22)":"rgba(255,255,255,.1)",color:online?"#a8e6b8":"rgba(220,190,145,.6)",fontSize:"12px",fontWeight:700}}>{online?"🟢":"⚫"}</button>
+            <button onClick={onBack} style={{padding:"7px 11px",borderRadius:"50px",border:"1px solid rgba(255,255,255,.15)",background:"transparent",color:"rgba(220,190,145,.7)",fontSize:"12px",cursor:"pointer"}}>Salir</button>
+          </div>
+        </div>
+        {/* Stats */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"9px"}}>
+          {[{l:"Hoy",v:`$${earn}`,c:"#6bcb77",i:"💰"},{l:"Trabajos",v:done,c:"#ffd93d",i:"✅"},{l:"Rating",v:"4.9★",c:"#a8e6b8",i:"🏆"}].map((s,i)=>(
+            <div key={i} style={{background:"rgba(0,0,0,.18)",borderRadius:"12px",padding:"11px",border:"1px solid rgba(255,255,255,.08)",textAlign:"center"}}>
+              <div style={{fontSize:"17px"}}>{s.i}</div>
+              <div style={{fontWeight:800,fontSize:"14px",color:s.c,marginTop:"3px"}}>{s.v}</div>
+              <div style={{fontSize:"10px",color:"rgba(220,190,145,.55)",marginTop:"1px"}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── PHONE BANNER ── */}
+      <div style={{margin:"14px 20px 0",padding:"13px 15px",borderRadius:"16px",background:phoneSaved?"rgba(45,140,78,.08)":"rgba(255,200,80,.1)",border:`2px solid ${phoneSaved?"rgba(45,140,78,.25)":"rgba(200,150,50,.3)"}`,display:"flex",alignItems:"center",gap:"10px"}}>
+        <div style={{fontSize:"26px"}}>{phoneSaved ? "📱" : "⚠️"}</div>
+        <div style={{flex:1}}>
+          {phoneSaved
+            ? <><p style={{margin:0,fontWeight:800,fontSize:"15px",color:"#1a3a26"}}>+52 {phone}</p><p style={{margin:0,color:"#2d8c4e",fontSize:"11px",marginTop:"1px"}}>✓ Visible para tus clientes</p></>
+            : <><p style={{margin:0,fontWeight:700,fontSize:"13px",color:"#7a4a10"}}>Añade tu teléfono de contacto</p><p style={{margin:0,color:"#8a6a40",fontSize:"11px",marginTop:"1px"}}>Los clientes te necesitan para coordinar</p></>
+          }
+        </div>
+        <button onClick={()=>setShowP(true)} style={{padding:"8px 14px",borderRadius:"50px",border:"none",cursor:"pointer",background:phoneSaved?"rgba(45,140,78,.18)":"linear-gradient(135deg,#2d8c4e,#3db368)",color:phoneSaved?"#2d8c4e":"white",fontSize:"12px",fontWeight:700,whiteSpace:"nowrap",boxShadow:phoneSaved?"none":"0 4px 12px rgba(45,140,78,.3)"}}>
+          {phoneSaved ? "✎ Editar" : "+ Añadir"}
+        </button>
+      </div>
+
+      {/* ── MAP BANNER ── */}
+      <div style={{margin:"10px 20px 0",padding:"12px 15px",borderRadius:"14px",background:"rgba(255,255,255,.58)",border:"1px solid rgba(120,90,60,.15)",display:"flex",alignItems:"center",gap:"10px"}}>
+        <div style={{fontSize:"22px"}}>🗺️</div>
+        <div style={{flex:1}}>
+          <p style={{margin:0,fontWeight:700,fontSize:"13px",color:"#1a3a26"}}>{userPos?"📍 GPS activo":"Ver solicitudes en el mapa"}</p>
+          <p style={{margin:0,color:"#7a6a5a",fontSize:"11px",marginTop:"1px"}}>{userPos?`${userPos[0].toFixed(4)}, ${userPos[1].toFixed(4)}`:"Localiza a tus clientes en tiempo real"}</p>
+        </div>
+        <button onClick={()=>setShowMap(true)} style={{padding:"7px 13px",borderRadius:"50px",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#2d8c4e,#3db368)",color:"white",fontSize:"12px",fontWeight:700,whiteSpace:"nowrap",boxShadow:"0 4px 12px rgba(45,140,78,.3)"}}>Ver mapa</button>
+      </div>
+
+      {/* Specialty + tabs */}
+      <div style={{margin:"10px 20px 14px",padding:"11px 15px",borderRadius:"14px",background:"rgba(45,140,78,.07)",border:"1px solid rgba(45,140,78,.2)",display:"flex",alignItems:"center",gap:"10px"}}>
+        <GI ch={sp.icon} s={22}/><div style={{flex:1}}><p style={{margin:0,fontWeight:700,fontSize:"13px",color:"#1a3a26"}}>{sp.name}</p><p style={{margin:0,color:"#7a6a5a",fontSize:"11px"}}>${sp.price} MXN/hr</p></div>
+        <button onClick={()=>setSp(null)} style={{padding:"5px 11px",borderRadius:"50px",border:"none",background:"rgba(45,140,78,.18)",color:"#2d8c4e",fontSize:"12px",cursor:"pointer",fontWeight:700}}>Cambiar</button>
+      </div>
+
+      <div style={{display:"flex",margin:"0 20px 14px",background:"rgba(255,255,255,.6)",borderRadius:"12px",padding:"3px",border:"1px solid rgba(120,90,60,.13)"}}>
+        {[["requests",`🔔 Solicitudes${pending.length?` (${pending.length})`:""}`],["active",`⚡ En curso${active.length?` (${active.length})`:""}`],["history","📋 Historial"]].map(([t,l])=>(
+          <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"9px 3px",borderRadius:"9px",border:"none",cursor:"pointer",background:tab===t?"linear-gradient(135deg,#2d8c4e,#3db368)":"transparent",color:tab===t?"white":"#7a6a5a",fontSize:"11px",fontWeight:700,transition:"all .2s"}}>{l}</button>
+        ))}
+      </div>
+
+      <div style={{padding:"0 20px"}}>
+        {tab==="requests" && (
+          pending.length===0 ? <Empty icon="🕐" txt="Esperando solicitudes cerca de ti…"/> :
+          pending.map((job,i)=>(
+            <div key={job.id} style={{background:"rgba(255,255,255,.74)",borderRadius:"18px",padding:"16px",marginBottom:"12px",border:"1px solid rgba(45,140,78,.22)",animation:`slideUp .3s ease ${i*.08}s both`,boxShadow:"0 4px 14px rgba(45,140,78,.07)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:"11px"}}>
+                <div>
+                  <h3 style={{margin:"0 0 2px",fontWeight:800,color:"#1a3a26",fontSize:"14px"}}>{job.client}</h3>
+                  <p style={{margin:"0 0 1px",color:"#7a6a5a",fontSize:"12px"}}>📍 {job.address}</p>
+                  <p style={{margin:0,color:"#7a6a5a",fontSize:"11px"}}>🔧 {job.service} · 🚗 {job.dist}</p>
+                </div>
+                <p style={{margin:0,color:"#2d8c4e",fontWeight:800,fontSize:"20px",textAlign:"right"}}>${job.price}<br/><span style={{fontSize:"10px",color:"#7a6a5a",fontWeight:400}}>MXN</span></p>
+              </div>
+              <div style={{display:"flex",gap:"9px"}}>
+                <button onClick={()=>accept(job.id)} style={{flex:1,padding:"11px",borderRadius:"50px",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#2d8c4e,#3db368)",color:"white",fontWeight:700,fontSize:"13px",boxShadow:"0 4px 12px rgba(45,140,78,.3)"}}>✓ Aceptar</button>
+                <button onClick={()=>reject(job.id)} style={{flex:1,padding:"11px",borderRadius:"50px",border:"1.5px solid rgba(120,90,60,.2)",background:"rgba(255,255,255,.7)",color:"#7a6a5a",fontWeight:700,fontSize:"13px",cursor:"pointer"}}>✗ Rechazar</button>
+              </div>
+            </div>
+          ))
+        )}
+        {tab==="active" && (
+          active.length===0 ? <Empty icon="⚡" txt="No tienes trabajos activos"/> :
+          active.map(job=>(
+            <div key={job.id} style={{background:"rgba(45,140,78,.07)",borderRadius:"18px",padding:"16px",marginBottom:"12px",border:"1px solid rgba(45,140,78,.25)",boxShadow:"0 4px 14px rgba(45,140,78,.07)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:"12px"}}>
+                <div><h3 style={{margin:"0 0 3px",fontWeight:800,color:"#1a3a26",fontSize:"14px"}}>{job.client}</h3><p style={{margin:0,color:"#7a6a5a",fontSize:"12px"}}>📍 {job.address}</p></div>
+                <span style={{background:"rgba(45,140,78,.18)",color:"#2d8c4e",padding:"4px 12px",borderRadius:"50px",fontSize:"11px",fontWeight:700,height:"fit-content"}}>EN CURSO</span>
+              </div>
+              <button onClick={()=>complete(job.id)} style={{width:"100%",padding:"12px",borderRadius:"50px",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#2d8c4e,#3db368)",color:"white",fontWeight:700,fontSize:"13px",boxShadow:"0 4px 12px rgba(45,140,78,.3)"}}>Marcar como completado ✅</button>
+            </div>
+          ))
+        )}
+        {tab==="history" && (
+          <div style={{textAlign:"center",padding:"44px 0"}}>
+            <div style={{fontSize:"50px",marginBottom:"14px"}}>📋</div>
+            <p style={{fontWeight:800,color:"#1a3a26",fontSize:"18px",marginBottom:"6px"}}>{done} trabajos completados</p>
+            <p style={{color:"#7a6a5a",fontSize:"14px"}}>Ingresos totales: <strong style={{color:"#2d8c4e"}}>${earn+800} MXN</strong></p>
+          </div>
+        )}
+      </div>
+
+      {/* ── PHONE MODAL ── */}
+      {showPhone && (
+        <div className="mov" onClick={e=>e.target===e.currentTarget&&setShowP(false)}>
+          <div className="msh">
+            <h2 style={{fontSize:"20px",fontWeight:800,color:"#1a3a26",marginBottom:"6px"}}>📱 Tu número de contacto</h2>
+            <p style={{color:"#7a6a5a",fontSize:"13px",marginBottom:"20px",lineHeight:1.6}}>
+              Este número será visible para los clientes que confirmen una solicitud contigo. Úsalo para coordinar la llegada.
+            </p>
+            <div className="fgroup" style={{background:"rgba(45,140,78,.07)",padding:"16px",borderRadius:"16px",border:"2px solid rgba(45,140,78,.22)"}}>
+              <label className="flabel" style={{color:"#2d8c4e",fontSize:"14px"}}>📱 Teléfono de contacto *</label>
+              <div style={{position:"relative"}}>
+                <span style={{position:"absolute",left:"14px",top:"50%",transform:"translateY(-50%)",color:"#5a4a38",fontWeight:700,fontSize:"15px",zIndex:2}}>+52</span>
+                <input className="field" type="tel" inputMode="numeric" placeholder="777 123 4567"
+                  value={phone} maxLength={14}
+                  style={{paddingLeft:"56px",fontSize:"19px",fontWeight:700,letterSpacing:"2px",border:`2px solid ${phone.replace(/\D/g,"").length===10?"#2d8c4e":"rgba(120,90,60,.25)"}`}}
+                  onChange={e=>setPhone(e.target.value)}/>
+              </div>
+              {phone.replace(/\D/g,"").length > 0 && phone.replace(/\D/g,"").length < 10 && (
+                <p style={{color:"#e07b3a",fontSize:"12px",marginTop:"7px",fontWeight:600}}>⚠️ Ingresa los 10 dígitos completos</p>
+              )}
+              {phone.replace(/\D/g,"").length === 10 && (
+                <p style={{color:"#2d8c4e",fontSize:"12px",marginTop:"7px",fontWeight:700}}>✅ Número válido: +52 {phone}</p>
+              )}
+            </div>
+            <div style={{background:"rgba(45,140,78,.06)",borderRadius:"12px",padding:"12px",marginBottom:"18px",fontSize:"12px",color:"#5a4a38",lineHeight:1.6,border:"1px solid rgba(45,140,78,.12)"}}>
+              🔒 Tu número solo se comparte con clientes que confirmen una solicitud. Nunca se vende a terceros ni se usa con fines publicitarios.
+            </div>
+            <button className="bp" disabled={phone.replace(/\D/g,"").length<10} style={{marginBottom:"9px"}}
+              onClick={()=>{setPS(true);setShowP(false);}}>
+              Guardar número ✅
+            </button>
+            <button className="bg" onClick={()=>setShowP(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MAP MODAL ── */}
+      {showMap && (
+        <div className="mov" onClick={e=>e.target===e.currentTarget&&setShowMap(false)}>
+          <div className="msh">
+            <h2 style={{fontSize:"19px",fontWeight:800,color:"#1a3a26",marginBottom:"5px"}}>🗺️ Solicitudes en tu zona</h2>
+            <p style={{color:"#7a6a5a",fontSize:"12px",marginBottom:"14px"}}>Toca un marcador para ver los detalles del cliente</p>
+            {locating && (
+              <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"12px",color:"#5a4a38",fontSize:"13px"}}>
+                <div className="spin"/> Obteniendo tu ubicación GPS…
+              </div>
+            )}
+            <LeafletMap
+              height={290}
+              userPos={userPos}
+              markers={JOBS0.map(j=>({...j, name:j.client, icon:"👤", price:j.price}))}
+              onRequestGPS={()=>{ getGPS(); }}
+            />
+            {userPos && <div style={{marginTop:"9px",fontSize:"12px",color:"#2d8c4e",fontWeight:700}}>✅ GPS: {userPos[0].toFixed(5)}, {userPos[1].toFixed(5)}</div>}
+            {!userPos && <button onClick={getGPS} style={{marginTop:"10px",width:"100%",padding:"10px",borderRadius:"12px",border:"1px dashed rgba(45,140,78,.4)",background:"none",cursor:"pointer",color:"#2d8c4e",fontWeight:700,fontSize:"13px",fontFamily:"'Outfit',sans-serif"}}>📍 Activar mi ubicación GPS</button>}
+            <button className="bg" style={{marginTop:"12px"}} onClick={()=>setShowMap(false)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+
+      <nav className="wbar">
+        {[["🏠","Inicio",onBack,false],["🔔","Solicitudes",()=>setTab("requests"),tab==="requests"],["💰","Ganancias",()=>setTab("history"),tab==="history"],["👤","Perfil",null,false]].map(([ic,lb,fn,act],i)=>(
+          <button key={i} className={`nb ${act?"na":"nn"}`} onClick={fn||undefined}><span className="ni">{ic}</span>{lb}</button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ROOT
+═══════════════════════════════════════════════════════════ */
+function App() {
+  const [screen, setScreen] = useState(window.__MODE__ || "splash");
+  return (
+    <>
+      {screen==="splash"   && <Splash onSelect={s=>setScreen(s)}/>}
+      {screen==="client"   && <ClientApp onBack={()=>setScreen("splash")}/>}
+      {screen==="worker"   && <WorkerApp onBack={()=>setScreen("splash")}/>}
+      {screen==="register" && <RegisterApp onBack={()=>setScreen("splash")} onDone={()=>setScreen("worker")}/>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
